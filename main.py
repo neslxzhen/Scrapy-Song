@@ -1,54 +1,172 @@
-ï»¿import time
-from bs4 import BeautifulSoup
-from selenium import webdriver
 import re
+import urllib.request
+import time
+from bs4 import BeautifulSoup
 
-#åƒæ•¸èª¿æ•´---------------------------------------------------------------
-format="mp4" #ä¸‹è¼‰æ ¼å¼
+#°Ñ¼Æ½Õ¾ã---------------------------------------------------------------
+from selenium import webdriver
+
+format="mp4" #¤U¸ü®æ¦¡
 fileName="test.txt"
-
-#------------------------------------------------------------
-browser=webdriver.Chrome()
-browser.implicitly_wait(1)
 
 urls=[]
 vedioTitles=[]
 songTitles=[]
-songTitles=[]
 myTitles=[]
 
-#é–‹å•Ÿæª”æ¡ˆè®€å–æ­Œå--------------------------------------------------
+#¶}±ÒÀÉ®×Åª¨ú°Êµe¦WºÙ¡A¨Ï¥Îwiki·j´M«á¨ú±oOP.ED--------------------------------------------------
+print("¨ú±oOP.ED...")
+browser=webdriver.Chrome()
+browser.implicitly_wait(1)
+
+c=0
+browser.get("https://zh.wikipedia.org/wiki/Wikipedia:%E9%A6%96%E9%A1%B5") #´«ºô­¶
 for myTitle in open(fileName,"r",encoding="UTF-8"):
+    print(c)
     myTitle=myTitle.strip()
     myTitles.append(myTitle)
-    browser.get("https://zh.wikipedia.org/wiki/Wikipedia:%E9%A6%96%E9%A1%B5") #æ›ç¶²é 
 
-    browser.find_element_by_id("searchInput").send_keys(myTitle+" å‹•ç•«")
-    browser.find_element_by_id("searchButton").click()
-    browser.implicitly_wait(1) #æ›ç¶²é 
+    #·j´M
+    browser.find_element_by_id("searchInput").send_keys(myTitle+" °Êµe")
+    browser.find_element_by_id("searchButton").click() #´«ºô­¶
+    browser.implicitly_wait(1)
 
+    #§ì²Ä¤@­Ó
     x=BeautifulSoup(browser.page_source,"html.parser").find("div","mw-search-result-heading")
-    print (x.find("a").get("string")) #getè¦ç”¨åœ¨å‰å¾Œéƒ½æœ‰åŒ…èµ·ä¾†ä¸¦ä¸”æœ€åº•å±¤çš„æƒ…æ³ä¸‹æ‰æŠ“çš„åˆ°
-    browser.get("https://zh.wikipedia.org"+x.find("a").get("href")) #æ›ç¶²é 
-    soup=BeautifulSoup(browser.page_source,"html.parser") #åˆ°é€™é‚Šå·²ä¸æœƒå†æ”¹è®Šç¶²é ï¼Œæ‰€ä»¥æˆ‘å¯«æ­»
+    a="https://zh.wikipedia.org"+x.find("a").get("href")
+    code=urllib.request.urlopen(a).read() #§ì¨úHTML
+    browser.get(a) #´«ºô­¶
+    browser.implicitly_wait(1)
 
-    try:
-        songTitles.append(soup.find("dt", string=re.compile("\u7247\u982d\u66f2\u300c+")).string)
-        #ç”¨æ­£è¦è¡¨é”å¼æœå°‹ ^()=é–‹é ­ç‚º... u7247=unicode"ç‰‡" u982d="é ­" u5c3e=å°¾ u66f2=æ›² u300c=ã€Œ
-        #string=æŠ“å…¶ä¸­çš„å­—ä¸²ï¼Œè·Ÿget()ä¸åŒ
-    except:
-        print(myTitle+"-OPå‡ºç¾ä¾‹å¤–")
-        print(soup.find("dt", string=re.compile("\u7247\u982d\u66f2+")))
-        x=soup.find("dt", string=re.compile("\u7247\u982d\u66f2+")).parent.contents#åˆ—å‡ºå…¶çˆ¶è¦ªçš„æ‰€æœ‰å­å­«
-        print(x)
+    #±NHTMLÂà¦r¦ê
+    codeStr=str(code,'utf-8') #¨Ï¥Îutf-8¾\Åª¦r¦ê
 
+    #´M§äºq¦W
+    i=""
+    j1=0
+    j2=0
+    i=codeStr[codeStr.find("¤ùÀY¦±¡u"):]
+    line=(i[:i.find("¡v")+1])
+    while(line.find("<")>0):
+        j1=line.find("<")
+        j2=line.find(">")
+        line=line[:j1]+line[j2+1:]
+    print (line)
+    if line !="":
+        songTitles.append(line)
+    else:
         songTitles.append(None)
-    try:
-        songTitles.append(soup.find("dt", string=re.compile("\u7247\u5c3e\u66f2\u300c+")).string)
-    except:
-        songTitles.append(None)
-        print(myTitle+"-EDå‡ºç¾ä¾‹å¤–")
 
-    print(songTitles)
+    i=codeStr[codeStr.find("¤ù§À¦±¡u"):]
+    line=(i[:i.find("¡v")+1])
+    while(line.find("<")>0):
+        j1=line.find("<")
+        j2=line.find(">")
+        line=line[:j1]+line[j2+1:]
+    print (line)
+    if line !="":
+        songTitles.append(line)
+    else:
+        songTitles.append(None)
+    c=c+1
+print("¤w¨ú±oOP.ED")
 print(songTitles)
-browser.close()
+
+#±Nºq¦W¥t¦s--------------------------------------------------------
+print("±Nºq¦W¥t¦s...")
+with open("songTitle.txt","w",encoding="UTF-8") as f:
+    i=0
+    j=0
+    for line in songTitles:
+        try:
+            f.write(myTitles[j]+','+line+'\n') #line¤£¬Oint
+        except:
+            f.write(myTitles[j]+','+"None\n")
+        i=i+1
+        if i%2==0:j=j+1
+print("¤w±Nºq¦W¥t¦s")
+
+#±Nºq¦W¼g¤J--------------------------------------------------------
+print("±Nºq¦W¼g¤J...")
+songTitles.clear()
+for songTitle in open("songTitle.txt","r",encoding="UTF-8"):
+    songTitle=songTitle.strip()
+    list=songTitle.split(",")
+    songTitles.append(list[1])
+print("¤w±Nºq¦W¼g¤J")
+print(songTitles)
+
+#·j´MYT------------------------------------------------------------------------
+for songTitle in songTitles:
+    if songTitle!="None":
+        browser.get('https://www.youtube.com/results?search_query='+songTitle+"+OP")
+        soup=BeautifulSoup(browser.page_source, "html.parser")
+        browser.implicitly_wait(0) # ·t¥Ü(Áô¦¡µ¥«İ)
+
+        x=soup.find('a','yt-simple-endpoint style-scope ytd-video-renderer') # §ä´M²Ä¤@­Ó a °Ï¶ô¥B class="yt-simple-endpoint style-scope ytd-video-renderer"
+        vedioTitle=x.get('title')
+        href = x.get('href')
+        urls.append("https://www.youtube.com"+href)
+        vedioTitles.append(vedioTitle)
+    else:
+        urls.append("None")
+        vedioTitles.append("None")
+print (urls)
+print ('-'*100)
+
+#urls=['https://www.youtube.com/watch?v=PqY8dcRZ06k', 'https://www.youtube.com/watch?v=OYwcXfAYAbg', 'https://www.youtube.com/watch?v=FAOnsPouYGE', 'https://www.youtube.com/watch?v=nrGB04GIePQ', 'https://www.youtube.com/watch?v=xkMdLcB_vNU', 'https://www.youtube.com/watch?v=yi0428jRI9U', 'https://www.youtube.com/watch?v=F9kqColvQhA', 'https://www.youtube.com/watch?v=kLAZja_0cCs', 'https://www.youtube.com/watch?v=8aZ_hMX87eo', 'https://www.youtube.com/watch?v=evwO4B8nxsU', 'https://www.youtube.com/watch?v=CicnGW43Ukw', 'https://www.youtube.com/watch?v=09yPyy9eldI', 'https://www.youtube.com/watch?v=Cp89qis1ddo', 'https://www.youtube.com/watch?v=nHztuf7NRiU', 'https://www.youtube.com/watch?v=0V6mb19viaw', 'https://www.youtube.com/watch?v=BHtgSerQvSI', 'https://www.youtube.com/watch?v=oxxKm_O1xwo', 'https://www.youtube.com/watch?v=gbj_v67IrB4', 'https://www.youtube.com/watch?v=zuoER3g-FTg', 'https://www.youtube.com/watch?v=07XFP6BhGac', 'https://www.youtube.com/watch?v=OC8oadcsPxw', 'https://www.youtube.com/watch?v=_4sEQYAaMhM']
+
+#±Nurl¥t¦s--------------------------------------------------------------------
+with open('urlFile.txt','w',encoding='UTF-8') as f:
+    i=0
+    j=0
+    for line in urls:
+        if urls[i]!="None":
+            f.write(myTitles[j]+","+line+','+vedioTitles[i]+'\n') #line¤£¬Oint
+        i=i+1
+        if i%2==0:j=j+1
+
+#±Nurl¼g¤J--------------------------------------------------------
+urls=urls.clear()
+urls=[]
+for url in open("urlFile.txt","r",encoding="UTF-8"):
+    url=url.strip()
+    list=url.split(",")
+    urls.append(list[1])
+
+#¤U¸ü----------------------------------------------------------------------------
+i2=0
+for url in urls:
+    browser.get('https://ytmp3.cc/')
+    print ('¸ü¤Jhttps://ytmp3.cc/')
+
+    i=0
+    while (i==0):
+        print ('¶i¤Jºô¯¸ÀË¬d°j°é:'+myTitles[i2])
+        time.sleep(5)
+        try:
+            print ('´M§äÃöÁä')
+            print (browser.find_element_by_id("title"))
+            i=1
+        except:
+            print ('­«·s¾ã²z')
+            browser.refresh() #­«·s¾ã²z
+
+    print ('¿é¤Jurl'+url)
+    browser.find_element_by_id('input').send_keys(url)
+    browser.find_element_by_id("mp4").click()
+    browser.find_element_by_id('submit').click()
+
+    #§PÂ_download«ö¶s¦s¦b»P§_
+    i1=0
+    while (i1==0):
+        print ('¶i¤JÀË¬ddownload¶s°j°é:')
+        try:
+            print ('´M§ädownload')
+            browser.find_element_by_id("download").click()
+            print ('¦s¦b¨ÃÂIÀ»')
+            i1=1
+        except:
+            print ('¤£¦s¦b')
+
+    i2=i2+1
