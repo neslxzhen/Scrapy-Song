@@ -3,3 +3,4 @@ __pycache__
 *.log
 chromedriver_86.0.4240.22.exe
 venv
+db.json
