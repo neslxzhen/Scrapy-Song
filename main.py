@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup, element
 from const import *
 from models.ChiaAnime import ChiaAnime
 from models.Animation import Status, Animation
+from models.GoogleAnime import GoogleAnime
 from utils.session import Session
 
 
@@ -14,6 +15,10 @@ def main():
         en_title = a.select_one('span[itemprop="name"]').text
         link_set[en_title] = a['href']
         asyncio.run(run(link_set))
+
+def googleChinese(keyword):
+    keyword=keyword.replace(" ","+")
+    return GoogleAnime( BeautifulSoup(Session().request("GET", "https://www.google.com/search?q="+keyword).content, 'html.parser')).Chinese
 
 def save(animate:Animation):
     s=str(animate.__jsonencode__())
@@ -29,6 +34,10 @@ async def run(link_set):
             title=title
         ))
         animate=ChiaAnime(BeautifulSoup(res.content, 'html.parser'))
+        animate.Chinese = await asyncio.get_event_loop().run_in_executor(None, functools.partial(
+            googleChinese,
+            animate.English
+        ))
         save(animate)
 
     await asyncio.gather(
